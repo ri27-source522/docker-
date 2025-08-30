@@ -13,29 +13,26 @@ ENV LC_MESSAGES=en_US.UTF-8
 
 RUN set -ex \
     && apt-get update -yqq \
-    && apt-get install -yq --no-install-recommends apt-utils locales \
-    && sed -i '/^# *\(en_US.UTF-8 UTF-8\)/s/^# *//' /etc/locale.gen \
-    && locale-gen en_US.UTF-8 \
+    && apt-get install -yqq --no-install-recommends apt-utils locales \
+    && sed -i -e 's/# \(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen \
+    && dpkg-reconfigure --frontend=noninteractive locales \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    && apt-get install -yq --no-install-recommends \
+    && buildDeps='freetds-dev libkrb5-dev libsasl2-dev libssl-dev libffi-dev git' \
+    && apt-get install -yqq --no-install-recommends \
+        $buildDeps \
+        libpq5 \
+        freetds-bin \
         build-essential \
         default-libmysqlclient-dev \
-        git \
         curl \
         rsync \
         netcat \
-        locales \
-        libpq5 \
-        libpq-dev \
-        freetds-bin \
-        freetds-dev \
-        libkrb5-dev \
-        libssl-dev \
-        libffi-dev \
         procps \
         jq \
     || apt-get install -yqq --fix-missing \
     && pip install mlflow==1.11.0 mysql-connector-python boto3 \
+    && apt-get purge -yqq $buildDeps \
+    && apt-get autoremove -yqq --purge \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/man /usr/share/doc /usr/share/doc-base
 
